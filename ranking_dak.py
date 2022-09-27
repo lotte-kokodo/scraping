@@ -1,9 +1,15 @@
+import datetime
 import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import bs4
 
+import random
+import time
 import const
+
+date_format = "YYYYMMDD HH:mm:ss (%Y%m%d %H:%M:%S)"
 
 
 def scrap():
@@ -24,6 +30,41 @@ def scrap():
     new_product_btn.click()
     time.sleep(2)
 
-    # 상품 리스트 가져오기
-    products = driver.find_elements(By.CLASS_NAME, "ext-li")
+    bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
+
+    # 상품 div 리스트 가져오기
+    product_divs = bs.select(
+        "#contents > div.content-wrap.frame-sm > div.grid-list-wrap.type-sorting > div.list-type-wrap > ul > li > div")
+
+    products = []
+    for p in product_divs:
+        price = p.select_one(".num").getText()
+        display_name = p.select_one(".text-elps2").getText()
+        stock = random.randint(0, 100)
+
+        thumbnail = p.select_one(".lozad")["data-src"]
+        seller_id = 1
+        delivery_fee = 3000
+        products.append({
+            "price": price,
+            "display_name": display_name,
+            "stock": stock,
+            "deadline": random_date("2008-01-01 00:00:00", "2008-01-31 23:59:59", random.random()),
+            "thumbnail": thumbnail,
+            "seller_id": seller_id,
+            "delivery_fee": delivery_fee})
+
     print(products)
+
+
+def str_time_prop(start, end, format, prop):
+    stime = time.mktime(time.strptime(start, format))
+    etime = time.mktime(time.strptime(end, format))
+
+    ptime = stime + prop * (etime - stime)
+
+    return time.strftime(format, time.localtime(ptime))
+
+
+def random_date(start, end, prop):
+    return str_time_prop(start, end, '%Y-%m-%d %H:%M:%S', prop)
