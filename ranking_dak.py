@@ -1,5 +1,4 @@
 import datetime
-import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -9,7 +8,7 @@ import random
 import time
 import const
 
-date_format = "YYYYMMDD HH:mm:ss (%Y%m%d %H:%M:%S)"
+date_format = "%Y-%m-%d %H:%M:%S"
 
 
 def scrap():
@@ -38,23 +37,33 @@ def scrap():
 
     products = []
     for p in product_divs:
+
         price = p.select_one(".num").getText()
         display_name = p.select_one(".text-elps2").getText()
         stock = random.randint(0, 100)
 
+        # 현재시간+10일 (start), 현재 시간+60일 (end)
+        current_time = datetime.datetime.now()
+        start = (current_time + datetime.timedelta(days=10)).strftime(date_format)
+        end = (current_time + datetime.timedelta(days=60)).strftime(date_format)
+        deadline = random_date(start, end, random.random())
+
         thumbnail = p.select_one(".lozad")["data-src"]
         seller_id = 1
         delivery_fee = 3000
+
         products.append({
             "price": price,
             "display_name": display_name,
             "stock": stock,
-            "deadline": random_date("2008-01-01 00:00:00", "2008-01-31 23:59:59", random.random()),
+            "deadline": deadline,
             "thumbnail": thumbnail,
             "seller_id": seller_id,
             "delivery_fee": delivery_fee})
 
     print(products)
+
+    driver.quit()
 
 
 def str_time_prop(start, end, format, prop):
@@ -67,4 +76,4 @@ def str_time_prop(start, end, format, prop):
 
 
 def random_date(start, end, prop):
-    return str_time_prop(start, end, '%Y-%m-%d %H:%M:%S', prop)
+    return str_time_prop(start, end, date_format, prop)
