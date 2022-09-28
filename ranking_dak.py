@@ -25,16 +25,15 @@ def scrap():
     time.sleep(2)
 
     # '카테고리' > '신상품' click
-    new_product_btn = driver.find_element(By.XPATH, "//*[@id='all-category']/ul/li[1]/a")
+    new_product_btn = driver.find_element(By.LINK_TEXT, "도시락·볶음밥")
     new_product_btn.click()
     time.sleep(2)
 
     bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
 
-    # 상품 div 리스트 가져오기
-    product_divs = bs.select(
-        "#contents > div.content-wrap.frame-sm > div.grid-list-wrap.type-sorting > div.list-type-wrap > ul > li > div")
-
+    # 상품 li 리스트 가져오기
+    product_divs = bs.find_all("div", "prd-item")
+    print(product_divs)
     products = []
     for p in product_divs:
 
