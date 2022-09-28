@@ -1,4 +1,11 @@
 import ranking_dak
+import sql_data
+
 
 if __name__ == '__main__':
-    ranking_dak.scrap()
+    category_product = ranking_dak.scrap()
+    print(category_product)
+
+    query = sql_data.crate_data_sql_file(category_product)
+    print(query)
+
