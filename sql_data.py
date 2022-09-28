@@ -3,7 +3,7 @@ import var
 def create_category_insert_sql():
     query = []
     for c in var.product_categories:
-        insert_sql = f"INSERT INTO category (name) VALUES ('{c}')"
+        insert_sql = f"INSERT INTO category (name) VALUES ('{c}');"
         query.append(insert_sql)
 
     return query
@@ -16,7 +16,7 @@ def create_product_insert_sql(category_product):
         products = category_product[c]
 
         for p in products:
-            insert_sql = f"INSERT INTO product ({var.product_tb_cols}) VALUES ({category_id}, {p})"
+            insert_sql = f"INSERT INTO product ({var.product_tb_cols}) VALUES ({category_id}, {p});"
             query.append(insert_sql)
 
         category_id += 1

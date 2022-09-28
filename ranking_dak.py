@@ -41,7 +41,7 @@ def scrap():
 
         product_strs = []
         for pd in product_divs:
-            price = pd.select_one(".num").getText()
+            price = pd.select_one(".num").getText().replace(",", "")
             display_name = pd.select_one(".text-elps2").getText()
             stock = random.randint(0, 100)
 
