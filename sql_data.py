@@ -1,45 +1,37 @@
 import var
 
-def create_category_insert_sql():
+
+def create_insert_sql(table, column, value):
     query = []
-    for c in var.product_categories:
-        insert_sql = f"INSERT INTO category (name) VALUES ('{c}');"
+    for v in value:
+        insert_sql = f"INSERT INTO {table}({column}) VALUES ({v});\n"
         query.append(insert_sql)
 
     return query
 
 
-def create_product_insert_sql(category_product):
-    query = []
-    category_id = 1
-    for c in var.product_categories:
-        products = category_product[c]
-
-        for p in products:
-            insert_sql = f"INSERT INTO product ({var.product_tb_cols}) VALUES ({category_id}, {p});"
-            query.append(insert_sql)
-
-        category_id += 1
-
-    return query
-
-
-def crate_data_sql_file(category_product):
-    queries = [create_category_insert_sql(), create_product_insert_sql(category_product)]
+def crate_data_sql_file(category_product, product_detail):
+    queries = []
 
     f = open('data.sql', 'w')
+
+    # 카테고리 삽입 쿼리 생성
+    queries.append(create_insert_sql("category", var.category_cols, var.category_values))
+
+    # 상품 삽입 쿼리
+    for c in var.product_categories:
+        products = category_product[c]
+        queries.append(create_insert_sql("product", var.product_tb_cols, products))
+
+    queries.append(create_insert_sql("product_detail", var.product_detail_tb_cols, product_detail))
 
     query_str = ""
     for query in queries:
         for q in query:
-            query_str += q + "\n"
-        query_str += "\n\n"
+            query_str += q
+        query_str += "\n"
 
     f.write(query_str)
     f.close()
 
     print(queries)
-
-    # return queries
-
-
