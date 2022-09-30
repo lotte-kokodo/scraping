@@ -1,7 +1,7 @@
 import datetime
 
 from selenium import webdriver
-from selenium.common import ElementNotInteractableException
+from selenium.common import ElementNotInteractableException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 import bs4
@@ -18,16 +18,20 @@ date_format = "%Y-%m-%d %H:%M:%S"
 def scrap():
     # 브라우저 열기
     driver = webdriver.Chrome('./chromedriver')
+    driver.maximize_window()
     driver.get(url)
     time.sleep(3)
 
     action = ActionChains(driver)
 
     # 카테고리
-    category_product = {}
-    for c in var.product_categories:
+    category_product_strs = {}
+    product_detail_strs = []
+    product_id = 0
+    for category_id, c in enumerate(var.product_categories):
         # '카테고리' mouse hover
-        header_category = driver.find_element(By.XPATH, "//*[@id='header']/div[2]/div/div/a")
+        header_category = driver.find_element(By.XPATH,
+                                              "//*[@id='header']/div[2]/div/div/a")
         header_category.click()
         time.sleep(1)
 
@@ -36,6 +40,20 @@ def scrap():
         new_product_btn.click()
         time.sleep(1)
 
+        # 노출 상품 개수 '300' click
+        try:
+            product_cnt_select = driver.find_element(By.XPATH,
+                                                     "//*[@id='contents']/div[1]/div[5]/div[1]/div/div[2]")
+
+            product_cnt_select.click()
+            time.sleep(1)
+
+            product_cnt_li = driver.find_element(By.XPATH,
+                                                 "//*[@id='contents']/div[1]/div[5]/div[1]/div/div[2]/div/ul/li[4]")
+            product_cnt_li.click()
+        except NoSuchElementException:
+            print("노출상품개수 필터가 없는 카테고리")
+
         bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
 
         # 카테고리 생품
@@ -43,8 +61,9 @@ def scrap():
         product_divs = bs.find_all("div", "prd-item")
 
         product_strs = []
-        product_detail_strs = []
-        for pd in product_divs:
+        for pid, pd in enumerate(product_divs):
+            product_id += 1
+
             price = pd.select_one(".num").getText().replace(",", "")
             display_name = pd.select_one(".text-elps2").getText()
             name = display_name
@@ -61,7 +80,7 @@ def scrap():
             delivery_fee = 3000
 
             product_strs.append(
-                f"{price}, '{name}', '{display_name}', {stock}, '{deadline}', '{thumbnail}', {seller_id}, {delivery_fee}"
+                f"{category_id + 1}, {price}, '{name}', '{display_name}', {stock}, '{deadline}', '{thumbnail}', {seller_id}, {delivery_fee}"
             )
 
             # 상품디테일
@@ -76,7 +95,6 @@ def scrap():
                 time.sleep(2)
                 thumbnail_img.click()
 
-
             # 상품디테일 문서정보
             bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
 
@@ -86,34 +104,17 @@ def scrap():
 
             for order, img in enumerate(product_detail_img_tags):
                 product_detail_strs.append(
-                    f"{order}, '{img['src']}'"
+                    f"{product_id}, {order+1}, '{img['src']}'"
                 )
 
             driver.back()
-            time.sleep(3)
+            time.sleep(2)
 
-            # # 상품 디테일 보기
-            # product_thumbnails = driver.find_elements(By.TAG_NAME, "figure")
-            # for pi in product_thumbnails:
-            #     # 메인화면 문서정보
-            #     bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
-            #
-            #     pi.click()
-            #     time.sleep(5)
-            #
-            #     # 상품디테일 문서정보
-            #     bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
-            #
-            #     product_detail_imgs = bs.find('img', {'alt': '상세'})
-            #     print(product_detail_imgs)
-            #
-            #     driver.back()
-            #     time.sleep(3)
-
-        category_product[c] = product_strs
+        # 카테고리에 해당되는 상품 dict
+        category_product_strs[c] = product_strs
 
     driver.quit()
-    return category_product
+    return category_product_strs, product_detail_strs
 
 
 def str_time_prop(start, end, format, prop):
