@@ -114,7 +114,7 @@ def scrap():
             # insert query value 생성
             product_strs.append(
                 f"{category_id + 1}, {price}, '{name}', '{display_name}', {stock}, '{deadline}', '{thumbnail}', "
-                f"{seller_id}, {delivery_fee}, {base_date}, {base_date}"
+                f"{seller_id}, {delivery_fee}, '{base_date}', '{base_date}'"
             )
             print(f"product_str: {product_strs[-1]}")
 
@@ -124,7 +124,7 @@ def scrap():
                 base_date = datetime.datetime.now().strftime(base_date_format)
                 try:
                     product_detail_strs.append(
-                        f"{product_id}, {order + 1}, '{img['src']}', {base_date}, {base_date}"
+                        f"{product_id}, {order + 1}, '{img['src']}', '{base_date}', '{base_date}'"
                     )
                     print(f"product detail str: {product_detail_strs[-1]}")
                 except KeyError:
