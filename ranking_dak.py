@@ -15,6 +15,10 @@ url = 'https://www.rankingdak.com/'
 base_date_format = "%Y-%m-%d %H:%M:%S.%f"
 date_format = "%Y-%m-%d %H:%M:%S"
 
+CATEGORY_PRODUCT_MAX_SIZE = 30
+PRODUCT_DETAIL_MAX_SIZE = 10
+PRODUCT_SIZE_SELECTOR = {60: 1, 100: 2, 200: 3, 300: 4}
+
 
 def scrap():
     # 브라우저 열기
@@ -39,7 +43,7 @@ def scrap():
         new_product_btn.click()
         time.sleep(1)
 
-        # 노출 상품 개수 '300' click
+        # 노출 상품 개수 selector > li click
         try:
             product_cnt_select = driver.find_element(By.XPATH,
                                                      "//*[@id='contents']/div[1]/div[5]/div[1]/div/div[2]")
@@ -48,7 +52,9 @@ def scrap():
             time.sleep(1)
 
             product_cnt_li = driver.find_element(By.XPATH,
-                                                 "//*[@id='contents']/div[1]/div[5]/div[1]/div/div[2]/div/ul/li[3]/a")
+                                                 f"//*[@id='contents']"
+                                                 f"/div[1]/div[5]/div[1]/div/div[2]"
+                                                 f"/div/ul/li[{PRODUCT_SIZE_SELECTOR[60]}]/a")
             product_cnt_li.click()
             time.sleep(2)
         except NoSuchElementException:
@@ -56,12 +62,17 @@ def scrap():
 
         bs = bs4.BeautifulSoup(driver.page_source, features="html.parser")
 
-        # 카테고리 생품
+        # 카테고리 상품
         # 상품 li 리스트 가져오기
         product_divs = bs.find_all("div", "prd-item")
 
         product_strs = []
+        product_size = 0
         for pd in product_divs:
+            if product_size == CATEGORY_PRODUCT_MAX_SIZE:
+                break
+            product_size += 1
+
             price = pd.select_one(".num").getText().replace(",", "")
             display_name = pd.select_one(".text-elps2").getText()
             name = display_name
@@ -96,6 +107,9 @@ def scrap():
 
             except NoSuchElementException:
                 print("썸네일 이미지 엘리먼트 못찾음")
+
+                # 해당 상품은 카운팅에 미포함
+                product_size -= 1
                 continue
 
             # 상품디테일 문서정보
@@ -120,7 +134,12 @@ def scrap():
 
             product_id += 1
             print(f"product_detail_img_tags: {product_detail_img_tags}")
+            detail_size = 0
             for order, img in enumerate(product_detail_img_tags):
+                if detail_size == PRODUCT_DETAIL_MAX_SIZE:
+                    break
+                detail_size += 1
+
                 base_date = datetime.datetime.now().strftime(base_date_format)
                 try:
                     product_detail_strs.append(
@@ -129,6 +148,7 @@ def scrap():
                     print(f"product detail str: {product_detail_strs[-1]}")
                 except KeyError:
                     print("제품상세 src 없는 <img>")
+                    detail_size -= 1
                     continue
 
             driver.execute_script("window.history.go(-1)")
